@@ -29,7 +29,7 @@ def index():
     db.session.add(stu)
     db.session.commit()
 
-    print('12345')
+    print('12345conflit')
     r= None 
     try:
         r = StrictRedis(host='redis01',decode_responses=True)
