@@ -25,11 +25,11 @@ class Student(db.Model):
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    stu = Student('jetthisis a conflit', 59)
+    stu = Student('jetccccccccc', 59)
     db.session.add(stu)
     db.session.commit()
 
-    print('12345')
+    print('12345conflit')
     r= None 
     try:
         r = StrictRedis(host='redis01',decode_responses=True)
