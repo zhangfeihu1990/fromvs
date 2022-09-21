@@ -25,7 +25,7 @@ class Student(db.Model):
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    stu = Student('jet Li', 59)
+    stu = Student('jet', 59)
     db.session.add(stu)
     db.session.commit()
 
