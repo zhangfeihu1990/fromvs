@@ -1,0 +1,36 @@
+version: '3' # 版本号
+services: # 服务
+        web01:  # flask服务
+                image: "myweb:0.2"  # 使用刚刚用Dockerfile制作好的镜像
+                ports: # 开放的端口
+                        - "5000:5000"
+                depends_on:  # 依赖，redis服务先启动，web服务后启动
+                  - redis01
+                  - mysql
+                networks: # 使用自定义网络，方便用域名访问
+                        - "mynet"
+
+        redis01:  # redis服务
+                image: "redis:6.2"  # 使用官方镜像
+                ports:  
+                        - "6380:6379" # 开放的端口
+                networks:   # 使用自定义网络
+                        - "mynet"
+        mysql:
+                image: "mysql:5.7.22"
+                build: ./mysql
+                volumes: 
+                        - ./mysql:/home
+                environment:
+                        - MYSQL_DATABASE=test
+                        - MYSQL_ROOT_PASSWORD=123456
+                ports:
+                        - "3306:3306"
+                networks:   # 使用自定义网络
+                        - "mynet"        
+                command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci                
+
+
+networks: # 因为使用自定义网络，所以需要配置mynet为自定义网络
+        mynet:
+                external: true

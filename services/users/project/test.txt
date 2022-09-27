@@ -1,3 +1,20 @@
-1234
+from flask import Flask, render_template ,jsonify
+from redis import StrictRedis
+from flask_sqlalchemy import SQLAlchemy
+import pymysql
+pymysql.install_as_MySQLdb()
 
-abcd
+app = Flask(__name__)
+
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    print('12345')
+    r= None 
+    try:
+        r = StrictRedis(host='redis01',decode_responses=True)
+        if not r.get("k1"):
+            r.set("k1",0)
+        r.incr("k1")
+        return render_template('index.html', num = r.get("k1"))
+    finally:
+        r.close()

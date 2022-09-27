@@ -2,11 +2,14 @@ from flask import Flask, render_template ,jsonify
 from redis import StrictRedis
 from flask_sqlalchemy import SQLAlchemy
 import pymysql
+import json
+
+
 pymysql.install_as_MySQLdb()
 
 app = Flask(__name__)
 
-baseURL = "mysql://root:123456@http://mysql/test"
+baseURL = "mysql://root:123456@139.9.115.246:3306/test"
 app.config['SQLALCHEMY_DATABASE_URI'] = baseURL #配置数据库url
 app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
@@ -29,7 +32,7 @@ def index():
     print('12345')
     r= None 
     try:
-        r = StrictRedis(host='redis01',decode_responses=True)
+        r = StrictRedis(host='139.9.115.246',port=6380,decode_responses=True)
         if not r.get("k1"):
             r.set("k1",0)
         r.incr("k1")
@@ -48,10 +51,13 @@ def add():
 @app.route('/query', methods=['GET', 'POST'])
 def query():
     print('test..query..')
-    stulist  = Student.query.all()
+    stulist  = Student.query.first()
+    print('test..query..end')
     return jsonify({
     'status': 'success',
     'message': stulist
      })
     
 
+if __name__ == '__main__':
+    app.run()
