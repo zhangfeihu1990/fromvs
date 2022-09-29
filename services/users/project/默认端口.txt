@@ -1,0 +1,21 @@
+MySQL默认端口 3306
+
+Redis默认端口 6379
+
+MongoDB默认端口 27017
+
+django端口 8000
+
+flask端口 5000
+
+pyspider服务端口 5000（由flask开发）
+
+gerapy服务端口 8000（由django开发）
+
+scrapyd服务端口 6800
+
+ipython notebook 默认端口 8888
+
+HTTP默认端口 80
+
+HTTPS服务默认端口443
