@@ -1,3 +1,4 @@
+
 from flask import Flask, render_template ,jsonify
 from redis import StrictRedis
 from flask_sqlalchemy import SQLAlchemy
@@ -9,16 +10,27 @@ from flask import stream_with_context
 from io import StringIO
 import csv
 
+#from flask_cors import CORS
+
+#from json_flask import JsonFlask
+#from json_response import JsonResponse
+
 
 pymysql.install_as_MySQLdb()
 
 app = Flask(__name__)
+#app = JsonFlask(__name__)
+#CORS(app, supports_credentials=True)
 
+#jdbc:mysql://localhost:3306/szw?serverTimezone=UTC
 baseURL = "mysql://root:123456@139.9.115.246:3306/test"
 app.config['SQLALCHEMY_DATABASE_URI'] = baseURL #配置数据库url
 app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
+
 db = SQLAlchemy(app)
+
+sr = StrictRedis(host='139.9.115.246',port=6380,decode_responses=True)
 
 class Student(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -31,6 +43,12 @@ class Student(db.Model):
 
     def __repr__(self):
         return '<User %r>' % self.name
+
+
+@app.route("/testjson")
+def test_json_response():
+    return ['Tom', 'Jack12']
+
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -45,6 +63,43 @@ def index():
     finally:
         r.close()
 
+@app.route('/rsAdd/<name>/', methods=['GET', 'POST'])
+def redisAdd(name):
+    try:
+        result = sr.set('name',name)
+        #sr.get('name')
+        #sr.delete('name')
+        #result=sr.keys()
+        #sr.lpush()
+        #sr.setex('name',1000)
+        #sr.hget
+        #sr.expire
+        #sr.exists
+
+        return name
+    except Exception as e:
+        print("exception:{}".format(e))   
+@app.route('/rsGet/<name>/', methods=['GET', 'POST'])
+def redisGet(name):
+    try:
+        result = sr.get('name')
+        #sr.get('name')
+        #sr.delete('name')
+        #result=sr.keys()
+        #sr.lpush()
+        #sr.setex('name',1000)
+        #sr.hget
+        #sr.expire
+        #sr.exists
+        #sr.hmget()
+        #sr.rpush('name',1,2,3)
+        #sr.linsert('name','before',2,8)
+
+        return result
+    except Exception as e:
+        print("exception:{}".format(e))           
+
+
 @app.route('/add', methods=['GET', 'POST'])
 def add():
     print('test....')
@@ -52,6 +107,34 @@ def add():
     db.session.add(stu)
     db.session.commit() 
     return "add sucess!"
+
+@app.route('/delete/<userid>/', methods=['GET', 'POST'])
+def delete(userid):
+    print('delete....')
+# 删除
+#User.query.filter_by(User.username='name').delete()
+# 修改
+#User.query.filter_by(User.username='name').update({'password':'newdata'})
+
+    # 获取用户对象
+    user = Student.query.filter_by(id=userid).first() #查询出id=1的用户
+    # 删除用户
+    db.session.delete(user)
+    #提交数据库会话
+    db.session.commit()
+    return "delete name {} sucess!".format(user.name)
+
+@app.route('/update/<userid>/', methods=['GET', 'POST'])
+def update(userid):
+    print('update....{}'.format(userid))
+    # 获取用户对象
+    user = Student.query.filter_by(id=userid).first() #查询出id=1的用户
+    # 删除用户
+    user.age = 99
+    db.session.update(user)
+    #提交数据库会话
+    db.session.commit()
+    return "update name {} sucess!".format(user.name)    
 
 @app.route('/query', methods=['GET', 'POST'])
 def query():
@@ -63,6 +146,26 @@ def query():
     'status': 'success',
     'message': stulist.name
      })
+
+@app.route('/queryfull', methods=['GET', 'POST'])
+def queryfull():
+    print('test..query..')
+    stulist  = Student.query.all()
+    ll=[]
+    for stu in stulist:
+        dd = dict()
+        dd['name'] = stu.name
+        dd['age'] = stu.age
+        ll.append(dd)
+
+    print('test..query..end{}'.format(ll))
+    jd = json.dumps(ll)
+    #str(obj, encoding='utf-8')
+    #return stulist
+    return jsonify({
+    'status': 'success',
+    'message': json.dumps(ll)
+     })     
 
 @app.route('/hello/<userid>/', methods=['GET', 'POST'])
 def hello(userid):
@@ -126,4 +229,4 @@ def readDiskfile():
     return "ok"
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)#debug=True

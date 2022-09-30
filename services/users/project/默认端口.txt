@@ -1,3 +1,21 @@
+
+dockerfile 的命令摘要
+
+FROM- 镜像从那里来
+MAINTAINER- 镜像维护者信息
+RUN- 构建镜像执行的命令，每一次RUN都会构建一层
+CMD- 容器启动的命令，如果有多个则以最后一个为准，也可以为ENTRYPOINT提供参数
+VOLUME- 定义数据卷，如果没有定义则使用默认
+USER- 指定后续执行的用户组和用户
+WORKDIR- 切换当前执行的工作目录
+HEALTHCHECH- 健康检测指令
+ARG- 变量属性值，但不在容器内部起作用
+EXPOSE- 暴露端口
+ENV- 变量属性值，容器内部也会起作用
+ADD- 添加文件，如果是压缩文件也解压
+COPY- 添加文件，以复制的形式
+ENTRYPOINT- 容器进入时执行的命令
+////////////////////////////////////////////////////////
 MySQL默认端口 3306
 
 Redis默认端口 6379
@@ -19,3 +37,98 @@ ipython notebook 默认端口 8888
 HTTP默认端口 80
 
 HTTPS服务默认端口443
+##############################################################
+
+Linux查看端口占用情况的方法：1、使用lsof命令，语法格式“lsof -i:端口号”；2、使用netstat命令，该命令可以显示tcp、udp的端口和进程等相关情况，语法格式“netstat -tunlp | grep 端口号”。
+###################################################################
+
+# 原生sql语句操作
+sql = 'select * from user'
+result = db.session.execute(sql)
+
+# 查询全部
+User.query.all()
+# 主键查询
+User.query.get(1)
+# 条件查询
+User.query.filter_by(User.username='name')
+# 多条件查询
+from sqlalchemy import and_
+User.query.filter_by(and_(User.username =='name',User.password=='passwd'))
+# 比较查询
+User.query.filter(User.id.__lt__(5)) # 小于5
+User.query.filter(User.id.__le__(5)) # 小于等于5
+User.query.filter(User.id.__gt__(5)) # 大于5
+User.query.filter(User.id.__ge__(5)) # 大于等于5
+# in查询
+User.query.filter(User.username.in_('A','B','C','D'))
+# 排序
+User.query.order_by('age') # 按年龄排序，默认升序，在前面加-号为降序'-age'
+# 限制查询
+User.query.filter(age=18).offset(2).limit(3)  # 跳过二条开始查询，限制输出3条
+# 增加
+use = User(id,username,password)
+db.session.add(use)
+db.session.commit() 
+# 删除
+User.query.filter_by(User.username='name').delete()
+# 修改
+User.query.filter_by(User.username='name').update({'password':'newdata'})
+
+
+
+User.qudry.filter(not_(User.name == 'wang'))
+查询名字和邮箱都以 li 开头的所有数据[2种方式]
+from sqlalchemy import and_
+User.query.filter(User.name.startswith('li'),User.email.startswith('li')).all()
+User.query.filter(and_(User.name.startswith('li'),User.email.startswith('li'))).all()
+
+查询password是 `123456` 或者 `email` 以 `itheima.com` 结尾的所有数据
+from sqlalchemy import or_
+User.query.filter(or_(User.password == '123456',User.email.endswith('itheima.com'))).all()
+
+查询id为 [1, 3, 5, 7, 9] 的用户列表
+User.query.filter(User.id.in_([1,3,5,7,9])).all()
+
+查询name为liu的角色数据
+user = User.query.filter(User.name == 'liu').first()
+role = Role.query.filter(Role.id == user.role_id).first()
+
+查询所有用户数据，并以邮箱排序
+User.query.order_by(User.email).all()
+User.query.order_by(User.email.desc()).all()
+
+每页3个，查询第2页的数据
+paginate = User.query.paginate(page, per_page,Error_out)
+paginate = User.query.paginate(2,3,False)
+
+
+
+#####################################
+详情查看
+https://blog.csdn.net/DN_XIAOXIAO/article/details/124039084
+mysql grant 用户权限总结
+用户权限管理主要有以下作用：
+1. 可以限制用户访问哪些库、哪些表
+2. 可以限制用户对哪些表执行SELECT、CREATE、DELETE、DELETE、ALTER等操作
+3. 可以限制用户登录的IP或域名
+4. 可以限制用户自己的权限是否可以授权给别的用户
+
+一、用户授权
+mysql> grant all privileges on *.* to 'yangxin'@'%' identified by 'yangxin123456' with grant option;
+
+添加权限（和已有权限合并，不会覆盖已有权限）
+
+GRANT Insert ON `your database`.* TO `user`@`host`;
+
+删除权限
+
+REVOKE Delete ON `your database`.* FROM `user`@`host`;
+
+
+all privileges：表示将所有权限授予给用户。也可指定具体的权限，如：SELECT、CREATE、DROP等。
+on：表示这些权限对哪些数据库和表生效，格式：数据库名.表名，这里写“*”表示所有数据库，所有表。如果我要指定将权限应用到test库的user表中，可以这么写：test.user
+to：将权限授予哪个用户。格式：”用户名”@”登录IP或域名”。%表示没有限制，在任何主机都可以登录。比如：”yangxin”@”192.168.0.%”，表示yangxin这个用户只能在192.168.0IP段登录
+identified by：指定用户的登录密码
+with grant option：表示允许用户将自己的权限授权给其它用户
+可以使用GRANT给用户添加权限，权限会自动叠加，不会覆盖之前授予的权限，比如你先给用户添加一个SELECT权限，后来又给用户添加了一个INSERT权限，那么该用户就同时拥有了SELECT和INSERT权限。
